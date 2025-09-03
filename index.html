@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Portfolio Tracker - Vanessa</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>📊 Portfolio Tracker</h1>
+                <div class="profile-selector">
+                    <select id="profileSelector">
+                        <option value="">Seleccionar Perfil</option>
+                    </select>
+                    <button id="newProfileBtn" class="new-profile-btn">+ Nuevo Perfil</button>
+                </div>
+            </div>
+            <div class="last-update">
+                <span id="lastUpdate">Última actualización: --</span>
+                <button id="refreshBtn" class="refresh-btn">🔄 Actualizar</button>
+            </div>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="market">Mercado en Vivo</button>
+            <button class="tab-btn" data-tab="portfolio">Mi Portfolio</button>
+            <button class="tab-btn" data-tab="sectors">Análisis Sectorial</button>
+            <button class="tab-btn" data-tab="ai-assistant">🤖 Asistente IA</button>
+            <button class="tab-btn" data-tab="profiles">Perfiles</button>
+        </div>
+
+        <!-- Tab Content: Market -->
+        <div id="market-tab" class="tab-content active">
+            <div class="add-ticker-section">
+                <input type="text" id="tickerInput" placeholder="Buscar ticker o sector..." />
+                <button id="addTickerBtn">+ Agregar</button>
+                <button id="searchSectorBtn">🔍 Buscar por Sector</button>
+            </div>
+
+            <div class="portfolio-stats">
+                <div class="stat-card">
+                    <h3>Total Mercado</h3>
+                    <p id="totalValue">$0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Rendimiento Promedio</h3>
+                    <p id="avgReturn">0%</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Dividendo Promedio</h3>
+                    <p id="avgDividend">0%</p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="portfolioTable">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Nombre</th>
+                            <th>Sector</th>
+                            <th>Precio</th>
+                            <th>Cambio %</th>
+                            <th>Expense Ratio</th>
+                            <th>Dividendo %</th>
+                            <th>Riesgo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolioBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Content: Portfolio -->
+        <div id="portfolio-tab" class="tab-content">
+            <div class="portfolio-header">
+                <div class="investment-input-section">
+                    <label>Inversión Total:</label>
+                    <div class="input-group">
+                        <span class="currency">$</span>
+                        <input type="number" id="investmentAmount" placeholder="10000" step="0.01" />
+                        <button id="calculateBtn">Calcular Distribución</button>
+                        <button id="aiRecommendBtn" class="ai-btn">🤖 Recomendación IA</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="portfolio-composition" id="portfolioComposition">
+                <!-- El contenido se genera dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Tab Content: Sectors Analysis -->
+        <div id="sectors-tab" class="tab-content">
+            <div class="sectors-overview">
+                <h2>Análisis Sectorial</h2>
+                <div class="market-conditions" id="marketConditions">
+                    <!-- Market conditions content -->
+                </div>
+                
+                <div class="sectors-grid" id="sectorsGrid">
+                    <!-- Sectors will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: AI Assistant -->
+        <div id="ai-assistant-tab" class="tab-content">
+            <div class="ai-assistant-container">
+                <h2>🤖 Asistente de Inversiones IA Powered by OpenAI</h2>
+                
+                <!-- AI Features Tabs -->
+                <div class="ai-features-nav">
+                    <button class="ai-feature-btn active" data-feature="profile">📊 Análisis de Perfil</button>
+                    <button class="ai-feature-btn" data-feature="chat">💬 Chat Interactivo</button>
+                    <button class="ai-feature-btn" data-feature="portfolio-review">🔍 Revisar Portfolio</button>
+                    <button class="ai-feature-btn" data-feature="market-insights">📈 Insights de Mercado</button>
+                    <button class="ai-feature-btn" data-feature="etf-analyzer">🔬 Analizar ETF</button>
+                </div>
+
+                <!-- Profile Analysis Feature -->
+                <div id="profile-feature" class="ai-feature active">
+                    <div class="questionnaire-section" id="questionnaire">
+                        <h3>Cuestionario de Perfil de Riesgo</h3>
+                        <div class="question-group">
+                            <label>¿Cuál es tu edad?</label>
+                            <select id="ageSelect">
+                                <option value="">Seleccionar</option>
+                                <option value="18-25">18-25 años</option>
+                                <option value="26-35">26-35 años</option>
+                                <option value="36-45">36-45 años</option>
+                                <option value="46-55">46-55 años</option>
+                                <option value="56-65">56-65 años</option>
+                                <option value="65+">Más de 65 años</option>
+                            </select>
+                        </div>
+
+                        <div class="question-group">
+                            <label>¿Cuál es tu experiencia invirtiendo?</label>
+                            <select id="experienceSelect">
+                                <option value="">Seleccionar</option>
+                                <option value="beginner">Principiante</option>
+                                <option value="intermediate">Intermedio</option>
+                                <option value="advanced">Avanzado</option>
+                                <option value="expert">Experto</option>
+                            </select>
+                        </div>
+
+                        <div class="question-group">
+                            <label>¿Cuál es tu horizonte de inversión?</label>
+                            <select id="timeHorizonSelect">
+                                <option value="">Seleccionar</option>
+                                <option value="1">Menos de 1 año</option>
+                                <option value="2">1-2 años</option>
+                                <option value="5">3-5 años</option>
+                                <option value="10">5-10 años</option>
+                                <option value="15">Más de 10 años</option>
+                            </select>
+                        </div>
+
+                        <div class="question-group">
+                            <label>¿Cómo reaccionarías a una caída del 20% en tu portfolio?</label>
+                            <select id="volatilitySelect">
+                                <option value="">Seleccionar</option>
+                                <option value="very-low">Vendería inmediatamente</option>
+                                <option value="low">Me pondría muy nervioso</option>
+                                <option value="medium">Me preocuparía pero mantendría</option>
+                                <option value="high">Mantendría sin problemas</option>
+                                <option value="very-high">Compraría más aprovechando la caída</option>
+                            </select>
+                        </div>
+
+                        <div class="question-group">
+                            <label>¿Cuál es tu objetivo principal?</label>
+                            <select id="goalSelect">
+                                <option value="">Seleccionar</option>
+                                <option value="capital-preservation">Preservar capital</option>
+                                <option value="income">Generar ingresos</option>
+                                <option value="balanced">Equilibrio entre crecimiento e ingresos</option>
+                                <option value="growth">Crecimiento a largo plazo</option>
+                                <option value="aggressive-growth">Máximo crecimiento</option>
+                            </select>
+                        </div>
+
+                        <button id="analyzeProfileBtn" class="analyze-btn">🔍 Analizar Mi Perfil con IA</button>
+                    </div>
+
+                    <div class="ai-results" id="aiResults" style="display: none;">
+                        <!-- AI analysis results will appear here -->
+                    </div>
+                </div>
+
+                <!-- Interactive Chat Feature -->
+                <div id="chat-feature" class="ai-feature">
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <h3>💬 Chat con tu Asesor IA</h3>
+                            <button id="clearChatBtn" class="clear-chat-btn">🗑️ Limpiar Chat</button>
+                        </div>
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="ai-message">
+                                <strong>Asesor IA:</strong> ¡Hola! Soy tu asesor de inversiones personal. Puedes preguntarme sobre ETFs, estrategias de inversión, análisis de riesgo, o cualquier duda sobre tu portfolio. ¿En qué puedo ayudarte?
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" id="chatInput" placeholder="Pregúntame sobre inversiones, ETFs, estrategias..." />
+                            <button id="sendChatBtn">Enviar</button>
+                        </div>
+                        <div class="chat-suggestions">
+                            <h4>Preguntas sugeridas:</h4>
+                            <button class="suggestion-btn" onclick="askSuggestion('¿Cuáles son los mejores ETFs para principiantes?')">¿Mejores ETFs para principiantes?</button>
+                            <button class="suggestion-btn" onclick="askSuggestion('¿Debo invertir en tecnología ahora?')">¿Invertir en tecnología?</button>
+                            <button class="suggestion-btn" onclick="askSuggestion('¿Cómo rebalanceo mi portfolio?')">¿Cómo rebalancear?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Review Feature -->
+                <div id="portfolio-review-feature" class="ai-feature">
+                    <div class="review-container">
+                        <h3>🔍 Revisión Inteligente de Portfolio</h3>
+                        <p>Obtén un análisis detallado de tu portfolio actual con recomendaciones personalizadas de IA.</p>
+                        <button id="reviewPortfolioBtn" class="review-btn">📊 Revisar Mi Portfolio</button>
+                        <div id="portfolioReviewResults" class="review-results"></div>
+                    </div>
+                </div>
+
+                <!-- Market Insights Feature -->
+                <div id="market-insights-feature" class="ai-feature">
+                    <div class="insights-container">
+                        <h3>📈 Insights de Mercado IA</h3>
+                        <p>Análisis actualizado del mercado y recomendaciones sectoriales generadas por IA.</p>
+                        <button id="getMarketInsightsBtn" class="insights-btn">🔮 Obtener Insights</button>
+                        <div id="marketInsightsResults" class="insights-results"></div>
+                    </div>
+                </div>
+
+                <!-- ETF Analyzer Feature -->
+                <div id="etf-analyzer-feature" class="ai-feature">
+                    <div class="analyzer-container">
+                        <h3>🔬 Analizador de ETFs IA</h3>
+                        <div class="analyzer-options">
+                            <div class="analyzer-section">
+                                <h4>Analizar un ETF</h4>
+                                <div class="input-group">
+                                    <input type="text" id="etfAnalyzeInput" placeholder="Ingresa ticker (ej: SPY)" />
+                                    <button id="analyzeETFBtn">Analizar</button>
+                                </div>
+                                <div id="etfAnalysisResults" class="analysis-results"></div>
+                            </div>
+                            
+                            <div class="analyzer-section">
+                                <h4>Comparar ETFs</h4>
+                                <div class="input-group">
+                                    <input type="text" id="etfCompare1" placeholder="Primer ETF (ej: SPY)" />
+                                    <input type="text" id="etfCompare2" placeholder="Segundo ETF (ej: VOO)" />
+                                    <button id="compareETFsBtn">Comparar</button>
+                                </div>
+                                <div id="etfComparisonResults" class="analysis-results"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Profiles -->
+        <div id="profiles-tab" class="tab-content">
+            <div class="profiles-manager">
+                <h2>Gestión de Perfiles</h2>
+                
+                <div class="profiles-list" id="profilesList">
+                    <!-- Profiles will be listed here -->
+                </div>
+
+                <div class="profile-templates">
+                    <h3>Plantillas Predefinidas</h3>
+                    <div class="templates-grid" id="templatesGrid">
+                        <!-- Profile templates will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Crear Nuevo Perfil</h3>
+                <form id="profileForm">
+                    <input type="text" id="profileName" placeholder="Nombre del perfil" required />
+                    <textarea id="profileDescription" placeholder="Descripción (opcional)"></textarea>
+                    <button type="submit">Crear Perfil</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="sectorModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Explorar por Sectores</h3>
+                <div id="sectorSearch">
+                    <!-- Sector search content -->
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">Cargando datos...</div>
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script src="ticker-database.js"></script>
+    <script src="ai-assistant.js"></script>
+    <script src="openai-assistant.js"></script>
+    <script src="config.js"></script>
+    <script src="portfolio-manager.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
