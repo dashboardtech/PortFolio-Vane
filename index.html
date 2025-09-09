@@ -25,16 +25,11 @@
     <script src="ticker-autocomplete.js"></script>
     <script src="ticker-details.js"></script>
     <script src="security-validation-test.js"></script>
-    <!-- Clerk SDK v5 from domain-specific CDN -->
-    <script
-        async
-        crossorigin="anonymous"
-        data-clerk-publishable-key="pk_test_dmVyaWZpZWQtZG9nZmlzaC02Ni5jbGVyay5hY2NvdW50cy5kZXYk"
-        src="https://verified-dogfish-66.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
-        type="text/javascript">
-    </script>
-    <!-- Working Auth Script -->
-    <script src="auth-debug.js"></script>
+    <!-- Hanko Elements Web Components -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@teamhanko/hanko-elements/dist/elements/hanko-auth.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@teamhanko/hanko-elements/dist/elements/hanko-profile.js"></script>
+    <!-- Hanko Auth Script -->
+    <script src="hanko-auth.js"></script>
     <script src="data-source-manager.js"></script>
     <script src="api-test.js"></script>
     <script src="settings-manager.js"></script>
@@ -71,9 +66,18 @@
                     
                     <div class="auth-buttons">
                         <button id="signInBtn" class="auth-btn">Iniciar Sesión</button>
-                        <button id="signUpBtn" class="auth-btn secondary" style="display: none;">Registrarse</button>
                         <button id="signOutBtn" class="auth-btn secondary" style="display: none;">Cerrar Sesión</button>
                         <button id="profileBtn" class="auth-btn secondary" style="display: none;">Mi Perfil</button>
+                    </div>
+                </div>
+                
+                <!-- Hanko Authentication Modal -->
+                <div id="hankoModal" class="hanko-modal" style="display: none;">
+                    <div class="hanko-modal-content">
+                        <span class="hanko-close">&times;</span>
+                        <div class="hanko-auth-container">
+                            <hanko-auth api="https://f4b3cb25-2230-4d66-9c21-40d95c6aba82.hanko.io"></hanko-auth>
+                        </div>
                     </div>
                 </div>
             </div>
