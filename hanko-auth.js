@@ -4,8 +4,11 @@ console.log('🔥 HANKO AUTH LOADING...');
 let hankoInstance = null;
 let currentUser = null;
 
-// Configuration
+// Configuration - Replace with your own Hanko Cloud project URL
 const HANKO_API_URL = 'https://f4b3cb25-2230-4d66-9c21-40d95c6aba82.hanko.io';
+
+// Note: This is a demo URL. For production, create your own Hanko Cloud project at:
+// https://cloud.hanko.io and replace this URL with your project's API URL
 
 async function initHanko() {
     console.log('🔍 Initializing Hanko authentication...');
@@ -19,6 +22,9 @@ async function initHanko() {
         
         if (!hankoInstance) {
             console.error('❌ Hanko auth element not found');
+            showNotification('❌ Authentication system not available', 'error');
+            // Still setup button listeners for fallback
+            setupButtonListeners();
             return;
         }
         
@@ -37,6 +43,10 @@ async function initHanko() {
         
     } catch (error) {
         console.error('❌ Error initializing Hanko:', error);
+        showNotification('⚠️ Authentication system in demo mode', 'warning');
+        
+        // Setup button listeners anyway for fallback functionality
+        setupButtonListeners();
     }
 }
 
@@ -61,15 +71,28 @@ async function waitForHankoElements() {
 function setupHankoEventListeners() {
     console.log('🔗 Setting up Hanko event listeners...');
     
+    // Updated event names based on Hanko documentation
     // Listen for successful login
-    document.addEventListener('hanko-auth-success', (event) => {
-        console.log('🎉 Hanko auth success:', event.detail);
+    document.addEventListener('hanko-session-created', (event) => {
+        console.log('🎉 Hanko session created:', event.detail);
         handleAuthSuccess(event.detail);
     });
     
     // Listen for logout
-    document.addEventListener('hanko-logout-success', (event) => {
-        console.log('👋 Hanko logout success');
+    document.addEventListener('hanko-session-expired', (event) => {
+        console.log('👋 Hanko session expired');
+        handleLogout();
+    });
+    
+    // Listen for user loaded
+    document.addEventListener('hanko-user-logged-in', (event) => {
+        console.log('👤 Hanko user logged in:', event.detail);
+        handleAuthSuccess(event.detail);
+    });
+    
+    // Listen for user logged out
+    document.addEventListener('hanko-user-logged-out', (event) => {
+        console.log('👋 Hanko user logged out');
         handleLogout();
     });
     
@@ -240,13 +263,20 @@ async function getCurrentUser() {
             currentUser = await response.json();
             console.log('👤 Current user:', currentUser);
             return currentUser;
-        } else {
-            console.log('❌ No authenticated user');
+        } else if (response.status === 401) {
+            console.log('🔓 User not authenticated');
             currentUser = null;
             return null;
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
     } catch (error) {
         console.error('❌ Error getting current user:', error);
+        // Show fallback message for demo purposes
+        if (error.message.includes('CORS') || error.message.includes('fetch')) {
+            console.warn('⚠️ Using demo mode - CORS or network error detected');
+            showNotification('⚠️ Running in demo mode. Set up your own Hanko Cloud project for full functionality.', 'warning');
+        }
         currentUser = null;
         return null;
     }
