@@ -25,11 +25,8 @@
     <script src="ticker-autocomplete.js"></script>
     <script src="ticker-details.js"></script>
     <script src="security-validation-test.js"></script>
-    <!-- Hanko Elements Web Components -->
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@teamhanko/hanko-elements/dist/elements/hanko-auth.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@teamhanko/hanko-elements/dist/elements/hanko-profile.js"></script>
-    <!-- Hanko Auth Script -->
-    <script src="hanko-auth.js"></script>
+    <!-- Authentication Disabled for Now -->
+    <!-- <script src="hanko-auth.js"></script> -->
     <script src="data-source-manager.js"></script>
     <script src="api-test.js"></script>
     <script src="settings-manager.js"></script>
@@ -39,12 +36,9 @@
     <div class="container">
         <header>
             <div class="header-content">
-                <h1>📊 Portfolio Tracker</h1>
-                <div class="profile-selector">
-                    <select id="profileSelector">
-                        <option value="">Seleccionar Perfil</option>
-                    </select>
-                    <button id="newProfileBtn" class="new-profile-btn">+ Nuevo Perfil</button>
+                <h1>📊 Smart Portfolio Tracker</h1>
+                <div class="header-info">
+                    <p>Análisis inteligente de inversiones con IA</p>
                 </div>
             </div>
             <div class="header-right">
@@ -53,43 +47,19 @@
                     <button id="refreshBtn" class="refresh-btn">🔄 Actualizar</button>
                 </div>
                 
-                <!-- Authentication Section -->
-                <div class="auth-container">
-                    <div id="authLoading" class="auth-loading" style="display: none;">
-                        <div class="auth-spinner"></div>
-                        <span>Cargando...</span>
-                    </div>
-                    
-                    <div id="userInfo" class="user-info" style="display: none;">
-                        <!-- User profile will be inserted here -->
-                    </div>
-                    
-                    <div class="auth-buttons">
-                        <button id="signInBtn" class="auth-btn">Iniciar Sesión</button>
-                        <button id="signOutBtn" class="auth-btn secondary" style="display: none;">Cerrar Sesión</button>
-                        <button id="profileBtn" class="auth-btn secondary" style="display: none;">Mi Perfil</button>
-                    </div>
-                </div>
-                
-                <!-- Hanko Authentication Modal -->
-                <div id="hankoModal" class="hanko-modal" style="display: none;">
-                    <div class="hanko-modal-content">
-                        <span class="hanko-close">&times;</span>
-                        <div class="hanko-auth-container">
-                            <hanko-auth api="https://f4b3cb25-2230-4d66-9c21-40d95c6aba82.hanko.io"></hanko-auth>
-                        </div>
-                    </div>
-                </div>
+                <!-- Authentication Disabled for Now -->
+                <!-- TODO: Re-enable authentication later -->
             </div>
         </header>
 
         <!-- Tabs Navigation -->
         <div class="tabs-nav">
-            <button class="tab-btn active" data-tab="market">Mercado en Vivo</button>
-            <button class="tab-btn" data-tab="portfolio">Mi Portfolio</button>
-            <button class="tab-btn" data-tab="sectors">Análisis Sectorial</button>
+            <button class="tab-btn active" data-tab="market">📈 Mercado en Vivo</button>
+            <button class="tab-btn" data-tab="portfolio">📊 Mi Portfolio</button>
+            <button class="tab-btn" data-tab="sectors">🏭 Análisis Sectorial</button>
             <button class="tab-btn" data-tab="ai-assistant">🤖 Asistente IA</button>
-            <button class="tab-btn" data-tab="profiles">Perfiles</button>
+            <button class="tab-btn" data-tab="profiles">👤 Perfiles</button>
+            <button class="tab-btn" data-tab="settings">⚙️ Configuración</button>
         </div>
 
         <!-- Tab Content: Market -->
@@ -138,21 +108,6 @@
 
         <!-- Tab Content: Portfolio -->
         <div id="portfolio-tab" class="tab-content">
-            <!-- Login Prompt for Portfolio -->
-            <div id="loginPrompt" class="login-prompt">
-                <h3>🔒 Acceso Requerido</h3>
-                <p>Para acceder a tu portfolio personalizado y guardar tus inversiones, necesitas iniciar sesión.</p>
-                <div class="auth-buttons">
-                    <button id="loginPromptSignIn" class="auth-btn">Iniciar Sesión</button>
-                    <button id="loginPromptSignUp" class="auth-btn secondary">Crear Cuenta</button>
-                </div>
-                <p style="font-size: 0.8em; color: #999; margin-top: 15px;">
-                    Tu información estará segura y solo tú podrás acceder a ella.
-                </p>
-            </div>
-
-            <!-- Protected Portfolio Content -->
-            <div class="protected-content">
                 <div class="portfolio-header">
                     <div class="investment-input-section">
                         <label>Inversión Total:</label>
@@ -348,7 +303,18 @@
         <!-- Tab Content: Profiles -->
         <div id="profiles-tab" class="tab-content">
             <div class="profiles-manager">
-                <h2>Gestión de Perfiles</h2>
+                <h2>👤 Gestión de Perfiles</h2>
+                
+                <!-- Current Profile Section -->
+                <div class="current-profile-section">
+                    <h3>Perfil Actual</h3>
+                    <div class="profile-selector">
+                        <select id="profileSelector">
+                            <option value="">Seleccionar Perfil</option>
+                        </select>
+                        <button id="newProfileBtn" class="btn-primary">+ Nuevo Perfil</button>
+                    </div>
+                </div>
                 
                 <div class="profiles-list" id="profilesList">
                     <!-- Profiles will be listed here -->
@@ -359,6 +325,169 @@
                     <div class="templates-grid" id="templatesGrid">
                         <!-- Profile templates will be populated here -->
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Settings -->
+        <div id="settings-tab" class="tab-content">
+            <div class="settings-container">
+                <h2>⚙️ Configuración</h2>
+                
+                <!-- API Configuration Section -->
+                <div class="settings-section">
+                    <h3>🔑 Configuración de API</h3>
+                    <div class="settings-group">
+                        <label for="openaiApiKey">OpenAI API Key</label>
+                        <div class="api-key-input-group">
+                            <input type="password" id="openaiApiKey" placeholder="sk-..." />
+                            <button id="toggleApiKeyVisibility" class="toggle-visibility-btn">👁️</button>
+                            <button id="saveApiKey" class="save-btn">Guardar</button>
+                        </div>
+                        <small class="help-text">
+                            Necesitas una clave API de OpenAI para usar las funciones de IA.
+                            <a href="https://platform.openai.com/api-keys" target="_blank">Obtener clave API →</a>
+                        </small>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label for="apiModel">Modelo de IA</label>
+                        <select id="apiModel">
+                            <option value="gpt-4">GPT-4 (Más preciso)</option>
+                            <option value="gpt-4-turbo-preview">GPT-4 Turbo (Más rápido)</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Más económico)</option>
+                        </select>
+                        <small class="help-text">El modelo determina la calidad y costo de las respuestas de IA.</small>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label for="alphaVantageApiKey">Alpha Vantage API Key (Datos de Mercado)</label>
+                        <div class="api-key-input-group">
+                            <input type="password" id="alphaVantageApiKey" placeholder="Ingresa tu API key de Alpha Vantage..." />
+                            <button id="toggleAlphaApiKeyVisibility" class="toggle-visibility-btn">👁️</button>
+                            <button id="saveAlphaApiKey" class="save-btn">Guardar</button>
+                            <button id="testAlphaApiKey" class="test-btn">🔍 Probar</button>
+                        </div>
+                        <small class="help-text">
+                            Para datos de mercado en tiempo real. Sin API key se usan datos simulados.
+                            <a href="https://www.alphavantage.co/support/#api-key" target="_blank">Obtener clave API gratis →</a>
+                        </small>
+                        <div id="alphaApiStatus" class="api-status"></div>
+                    </div>
+                </div>
+                
+                <!-- Display Preferences Section -->
+                <div class="settings-section">
+                    <h3>🎨 Preferencias de Visualización</h3>
+                    <div class="settings-group">
+                        <label>
+                            <input type="checkbox" id="darkMode" />
+                            <span>Modo Oscuro</span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label>
+                            <input type="checkbox" id="showDecimals" checked />
+                            <span>Mostrar Decimales en Precios</span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label for="currency">Moneda</label>
+                        <select id="currency">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="MXN">MXN ($)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Data & Updates Section -->
+                <div class="settings-section">
+                    <h3>📊 Datos y Actualizaciones</h3>
+                    <div class="settings-group">
+                        <label for="refreshInterval">Intervalo de Actualización</label>
+                        <select id="refreshInterval">
+                            <option value="30">30 segundos</option>
+                            <option value="60" selected>1 minuto</option>
+                            <option value="300">5 minutos</option>
+                            <option value="600">10 minutos</option>
+                            <option value="0">Manual</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label>
+                            <input type="checkbox" id="autoSave" checked />
+                            <span>Guardar cambios automáticamente</span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label for="dataSource">Fuente de Datos</label>
+                        <select id="dataSource">
+                            <option value="yahoo">Yahoo Finance</option>
+                            <option value="alphavantage">Alpha Vantage</option>
+                            <option value="simulated">Datos Simulados</option>
+                        </select>
+                        <small class="help-text">Algunas fuentes requieren API key adicional.</small>
+                    </div>
+                </div>
+                
+                <!-- Notifications Section -->
+                <div class="settings-section">
+                    <h3>🔔 Notificaciones</h3>
+                    <div class="settings-group">
+                        <label>
+                            <input type="checkbox" id="priceAlerts" />
+                            <span>Alertas de Precio</span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label>
+                            <input type="checkbox" id="portfolioAlerts" />
+                            <span>Alertas de Portfolio</span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label for="alertThreshold">Umbral de Alerta (%)</label>
+                        <input type="number" id="alertThreshold" value="5" min="1" max="100" />
+                    </div>
+                </div>
+                
+                <!-- Privacy & Security Section -->
+                <div class="settings-section">
+                    <h3>🔒 Privacidad y Seguridad</h3>
+                    <div class="settings-group">
+                        <button id="clearCache" class="action-btn secondary-btn">🗑️ Limpiar Caché</button>
+                        <button id="clearData" class="action-btn danger-btn">⚠️ Borrar Todos los Datos</button>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <button id="exportData" class="action-btn primary-btn">📥 Exportar Datos</button>
+                        <button id="importData" class="action-btn primary-btn">📤 Importar Datos</button>
+                    </div>
+                </div>
+                
+                <!-- About Section -->
+                <div class="settings-section">
+                    <h3>ℹ️ Acerca de</h3>
+                    <div class="about-info">
+                        <p><strong>Smart Portfolio Tracker</strong></p>
+                        <p>Versión: 2.0.0</p>
+                        <p>Desarrollado con ❤️ por Vanessa</p>
+                        <p><a href="#" id="showHelp">Ver Ayuda</a> | <a href="#" id="reportBug">Reportar Bug</a></p>
+                    </div>
+                </div>
+                
+                <!-- Save Settings Button -->
+                <div class="settings-actions">
+                    <button id="saveAllSettings" class="save-all-btn">💾 Guardar Configuración</button>
+                    <button id="resetSettings" class="reset-btn">🔄 Restaurar Valores por Defecto</button>
                 </div>
             </div>
         </div>
