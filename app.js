@@ -4,45 +4,27 @@ class PortfolioTracker {
         this.apiCache = new Map();
         this.currentProfile = null;
         this.profiles = this.loadProfiles();
+        this.stockApiErrorNotified = false;
         this.init();
     }
 
     init() {
-        this.setupTabNavigation();
+        setupTabNavigation(tab => this.loadTabContent(tab));
         this.setupEventListeners();
         this.setupSectorAnalysis();
         this.setupAIAssistant();
         this.setupProfileManager();
         this.initializeProfiles();
-        
+
+        if (!config.stockApiKey && !this.stockApiErrorNotified) {
+            this.showError('API de precios no configurada; usando datos estimados.');
+            this.stockApiErrorNotified = true;
+        }
+
         if (this.tickers.length > 0) {
             this.fetchAllData();
         }
         setInterval(() => this.fetchAllData(), 60000);
-    }
-
-    setupTabNavigation() {
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetTab = btn.dataset.tab;
-                
-                // Update active button
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // Update active content
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(`${targetTab}-tab`).classList.add('active');
-                
-                // Load tab-specific content
-                this.loadTabContent(targetTab);
-            });
-        });
     }
 
     setupEventListeners() {
@@ -151,7 +133,7 @@ class PortfolioTracker {
             const promises = this.tickers.map(ticker => this.fetchTickerData(ticker));
             await Promise.all(promises);
         } catch (error) {
-            this.showError('Error al obtener datos. Por favor intenta de nuevo.');
+            this.showError(error.message || 'Error al obtener datos. Por favor intenta de nuevo.');
         } finally {
             this.showLoading(false);
             this.updateLastUpdate();
@@ -160,105 +142,103 @@ class PortfolioTracker {
 
     async fetchTickerData(ticker) {
         try {
-            // Check if ticker exists in our database first
             const tickerInfo = this.getTickerFromDatabase(ticker);
-            
-            if (tickerInfo) {
-                // Use consistent data for each ticker based on the current day
-                const baseData = this.getStableTickerData(ticker);
-                
-                const tickerData = {
-                    symbol: ticker,
-                    name: tickerInfo.name,
-                    category: tickerInfo.sector,
-                    price: baseData.price,
-                    changePercent: baseData.changePercent,
-                    marketCap: baseData.marketCap,
-                    volume: baseData.volume,
-                    peRatio: baseData.peRatio,
-                    dividendYield: baseData.dividendYield,
-                    fiftyTwoWeekHigh: baseData.fiftyTwoWeekHigh,
-                    fiftyTwoWeekLow: baseData.fiftyTwoWeekLow,
-                    expenseRatio: tickerInfo.expense,
-                    riskLevel: this.getSectorRiskLevel(tickerInfo.sectorId)
-                };
+            const baseData = this.getStableTickerData(ticker);
+            let realData = null;
 
-                this.updateOrAddRow(tickerData);
-                this.updateStats();
-                
-                // Update portfolio manager with new prices
-                if (typeof portfolioManager !== 'undefined') {
-                    portfolioManager.updatePricesFromMarket(tickerData);
+            if (config && config.stockApiKey) {
+                try {
+                    realData = await fetchRealTimeQuote(ticker);
+                } catch (err) {
+                    console.warn(`Real data fetch failed for ${ticker}`, err);
+                    if (!this.stockApiErrorNotified) {
+                        this.showError('Error al obtener precios en tiempo real; usando datos estimados.');
+                        this.stockApiErrorNotified = true;
+                    }
                 }
-                return;
             }
 
-            // Fallback for unknown tickers - also stable
-            const baseData = this.getStableTickerData(ticker);
-            const fallbackData = {
+            const tickerData = {
                 symbol: ticker,
-                name: this.getCompanyName(ticker),
-                category: this.getCategory(ticker),
-                price: baseData.price,
-                changePercent: baseData.changePercent,
+                name: tickerInfo ? tickerInfo.name : this.getCompanyName(ticker),
+                category: tickerInfo ? tickerInfo.sector : this.getCategory(ticker),
+                price: realData ? realData.price.toFixed(2) : baseData.price,
+                changePercent: realData ? realData.changePercent.toFixed(2) : baseData.changePercent,
                 marketCap: baseData.marketCap,
-                volume: baseData.volume,
+                volume: realData ? this.formatVolume(realData.volume) : baseData.volume,
                 peRatio: baseData.peRatio,
                 dividendYield: baseData.dividendYield,
                 fiftyTwoWeekHigh: baseData.fiftyTwoWeekHigh,
                 fiftyTwoWeekLow: baseData.fiftyTwoWeekLow,
-                expenseRatio: 'N/A',
-                riskLevel: 'Medio'
+                expenseRatio: tickerInfo ? tickerInfo.expense : 'N/A',
+                riskLevel: tickerInfo ? this.getSectorRiskLevel(tickerInfo.sectorId) : 'Medio'
             };
-            
-            this.updateOrAddRow(fallbackData);
+
+            this.updateOrAddRow(tickerData);
             this.updateStats();
-            
+
+            if (typeof portfolioManager !== 'undefined') {
+                portfolioManager.updatePricesFromMarket(tickerData);
+            }
         } catch (error) {
             console.error(`Error fetching ${ticker}:`, error);
         }
     }
 
     getStableTickerData(ticker) {
-        // Generate a "seed" based on ticker and current date (but not time)
-        // This ensures prices stay the same throughout the day but can change daily
-        const today = new Date().toDateString(); // Gets date without time
-        const seed = this.hashCode(ticker + today);
-        
-        // Use the seed to generate consistent "random" values
-        const basePrice = this.getEstimatedPrice(ticker);
-        const priceSeed = Math.abs(seed) / 2147483647; // Normalize to 0-1
-        
-        // Small daily variation (±2%) instead of large random changes
-        const priceVariation = 1 + ((priceSeed * 4) - 2) / 100; // ±2%
-        const currentPrice = (basePrice * priceVariation).toFixed(2);
-        
-        // Generate other stable values
-        const changeSeed = Math.abs(this.hashCode(ticker + today + 'change')) / 2147483647;
-        const changePercent = ((changeSeed * 6) - 3).toFixed(2); // ±3%
-        
-        const volSeed = Math.abs(this.hashCode(ticker + today + 'volume')) / 2147483647;
-        const volume = Math.floor(volSeed * 100000000); // Up to 100M
-        
-        const peSeed = Math.abs(this.hashCode(ticker + today + 'pe')) / 2147483647;
-        const peRatio = (15 + (peSeed * 25)).toFixed(2); // 15-40
-        
-        const divSeed = Math.abs(this.hashCode(ticker + today + 'div')) / 2147483647;
-        const dividendYield = (divSeed * 4).toFixed(2); // 0-4%
-        
-        const capSeed = Math.abs(this.hashCode(ticker + today + 'cap')) / 2147483647;
-        const marketCap = this.formatMarketCap(capSeed * 3000000000000); // Up to 3T
-        
+        const price = this.generateStablePrice(ticker);
         return {
-            price: currentPrice,
-            changePercent: changePercent,
-            marketCap: marketCap,
-            volume: this.formatVolume(volume),
-            peRatio: peRatio,
-            dividendYield: dividendYield,
-            fiftyTwoWeekHigh: (parseFloat(currentPrice) * 1.25).toFixed(2),
-            fiftyTwoWeekLow: (parseFloat(currentPrice) * 0.75).toFixed(2)
+            price: price.toFixed(2),
+            changePercent: this.generateStableChange(ticker),
+            marketCap: this.generateStableMarketCap(ticker),
+            volume: this.generateStableVolume(ticker),
+            peRatio: this.generateStablePERatio(ticker),
+            dividendYield: this.generateStableDividend(ticker),
+            fiftyTwoWeekHigh: (price * 1.25).toFixed(2),
+            fiftyTwoWeekLow: (price * 0.75).toFixed(2)
         };
+    }
+
+    generateStablePrice(ticker) {
+        const seed = this.getDailySeed(ticker);
+        const basePrice = this.getEstimatedPrice(ticker);
+        const variation = 1 + ((this.normalizeSeed(seed) * 4) - 2) / 100;
+        return parseFloat((basePrice * variation).toFixed(2));
+    }
+
+    generateStableChange(ticker) {
+        const seed = this.getDailySeed(ticker + 'change');
+        return ((this.normalizeSeed(seed) * 6) - 3).toFixed(2);
+    }
+
+    generateStableVolume(ticker) {
+        const seed = this.getDailySeed(ticker + 'volume');
+        const volume = Math.floor(this.normalizeSeed(seed) * 100000000);
+        return this.formatVolume(volume);
+    }
+
+    generateStablePERatio(ticker) {
+        const seed = this.getDailySeed(ticker + 'pe');
+        return (15 + (this.normalizeSeed(seed) * 25)).toFixed(2);
+    }
+
+    generateStableDividend(ticker) {
+        const seed = this.getDailySeed(ticker + 'div');
+        return (this.normalizeSeed(seed) * 4).toFixed(2);
+    }
+
+    generateStableMarketCap(ticker) {
+        const seed = this.getDailySeed(ticker + 'cap');
+        return this.formatMarketCap(this.normalizeSeed(seed) * 3000000000000);
+    }
+
+    getDailySeed(key) {
+        const today = new Date().toDateString();
+        return this.hashCode(key + today);
+    }
+
+    normalizeSeed(seed) {
+        return Math.abs(seed) / 2147483647;
     }
 
     // Simple hash function to generate consistent "random" numbers
@@ -294,32 +274,7 @@ class PortfolioTracker {
     }
 
     getEstimatedPrice(ticker) {
-        const prices = {
-            // Core ETFs
-            'SPLG': 106.75, 'SPY': 585.23, 'QQQ': 508.45, 'VTI': 278.34, 'VOO': 538.75,
-            'IVV': 587.34, 'SCHX': 61.23, 'ITOT': 115.67, 'VEA': 49.87, 'VWO': 42.15,
-            
-            // Bond ETFs
-            'AGG': 98.45, 'BND': 71.23, 'TLT': 92.34, 'IEF': 98.67, 'LQD': 112.45,
-            
-            // Sector ETFs
-            'IYR': 89.34, 'VNQ': 87.23, 'XLRE': 45.67, 'IYZ': 78.34, 'VOX': 89.45,
-            'XLC': 67.89, 'IYK': 145.67, 'VDC': 198.34, 'XLP': 78.34, 'IYC': 89.45,
-            'VCR': 234.56, 'XLY': 167.89, 'IYE': 45.67, 'VDE': 98.34, 'XLE': 89.45,
-            'IYF': 67.89, 'VFH': 89.45, 'XLF': 43.21, 'IYJ': 123.45, 'VIS': 178.90,
-            'XLI': 134.56, 'IYM': 78.90, 'VAW': 189.23, 'XLB': 89.45, 'IYH': 267.89,
-            'VHT': 245.67, 'XLV': 134.56, 'IDU': 67.89, 'VPU': 156.78, 'XLU': 69.45,
-            'IYW': 134.56, 'VGT': 543.21, 'XLK': 215.45, 'ARKK': 45.67,
-            
-            // Individual Stocks - Realistic Prices
-            'AAPL': 233.45, 'MSFT': 450.23, 'GOOGL': 178.89, 'AMZN': 218.76,
-            'NVDA': 138.67, 'META': 590.45, 'TSLA': 381.23, 'BRK.B': 487.90,
-            'JPM': 234.56, 'V': 289.34, 'UNH': 634.78, 'JNJ': 178.45,
-            'WMT': 89.23, 'PG': 167.89, 'MA': 523.67, 'HD': 412.34,
-            'DIS': 123.89, 'BAC': 45.67, 'NFLX': 567.89, 'ADBE': 634.23,
-            'CRM': 345.67, 'PYPL': 78.90, 'INTC': 56.78, 'AMD': 189.45
-        };
-        return prices[ticker] || 150; // Default more realistic price
+        return PRICE_TABLE[ticker] || 150; // Default more realistic price
     }
 
     getCompanyName(ticker) {

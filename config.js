@@ -3,30 +3,40 @@
 
 class Config {
     constructor() {
-        // OpenAI Configuration
-        this.openAIApiKey = null; // Set this to your OpenAI API key
-        
-        // You can set the API key here (NOT RECOMMENDED for production)
-        // this.openAIApiKey = 'your-api-key-here';
-        
-        // Or prompt user to enter it
-        this.promptForApiKey = true;
+        // Allow configuration via env.js file
+        const env = window.env || {};
+        this.openAIApiKey = env.OPENAI_API_KEY || null;
+        this.stockApiKey = env.STOCK_API_KEY || null;
+
+        this.promptForApiKey = !this.openAIApiKey;
+        this.promptForStockApiKey = !this.stockApiKey;
     }
 
     initializeOpenAI() {
         if (typeof openAIAssistant !== 'undefined') {
-            if (this.openAIApiKey) {
-                openAIAssistant.setApiKey(this.openAIApiKey);
+            const storedKey = sessionStorage.getItem('openai_api_key');
+            const apiKey = this.openAIApiKey || storedKey;
+            if (apiKey) {
+                openAIAssistant.setApiKey(apiKey);
                 console.log('OpenAI API key configured successfully');
             } else if (this.promptForApiKey) {
-                const apiKey = localStorage.getItem('openai_api_key');
-                if (apiKey) {
-                    openAIAssistant.setApiKey(apiKey);
-                    console.log('OpenAI API key loaded from localStorage');
-                } else {
-                    this.showApiKeyPrompt();
-                }
+                this.showApiKeyPrompt();
+            } else {
+                console.warn('OpenAI API key not configured. AI features will be limited.');
             }
+        }
+    }
+
+    initializeStockAPI() {
+        const storedKey = sessionStorage.getItem('stock_api_key');
+        const apiKey = this.stockApiKey || storedKey;
+        if (apiKey) {
+            this.stockApiKey = apiKey;
+            console.log('Stock API key configured successfully');
+        } else if (this.promptForStockApiKey) {
+            this.showStockApiKeyPrompt();
+        } else {
+            console.warn('Stock API key not configured. Using estimated prices.');
         }
     }
 
@@ -36,11 +46,11 @@ class Config {
 
 Puedes obtener una clave en: https://platform.openai.com/api-keys
 
-La clave se guardará localmente en tu navegador.
+La clave se mantendrá solo durante la sesión actual.
         `.trim());
 
         if (apiKey && apiKey.trim()) {
-            localStorage.setItem('openai_api_key', apiKey.trim());
+            sessionStorage.setItem('openai_api_key', apiKey.trim());
             openAIAssistant.setApiKey(apiKey.trim());
             alert('✅ API Key configurada correctamente');
             console.log('OpenAI API key configured by user');
@@ -49,12 +59,37 @@ La clave se guardará localmente en tu navegador.
         }
     }
 
+    showStockApiKeyPrompt() {
+        const apiKey = prompt(`
+🔑 Para obtener precios en tiempo real, ingresa tu API Key de Alpha Vantage:
+
+Puedes conseguir una clave gratuita en: https://www.alphavantage.co/support/#api-key
+
+La clave se mantendrá solo durante la sesión actual.
+        `.trim());
+
+        if (apiKey && apiKey.trim()) {
+            sessionStorage.setItem('stock_api_key', apiKey.trim());
+            this.stockApiKey = apiKey.trim();
+            alert('✅ Stock API Key configurada correctamente');
+            console.log('Stock API key configured by user');
+        } else {
+            console.log('Stock API key configuration cancelled by user');
+        }
+    }
+
     clearStoredApiKey() {
-        localStorage.removeItem('openai_api_key');
+        sessionStorage.removeItem('openai_api_key');
         if (typeof openAIAssistant !== 'undefined') {
             openAIAssistant.setApiKey(null);
         }
         console.log('OpenAI API key cleared');
+    }
+
+    clearStoredStockApiKey() {
+        sessionStorage.removeItem('stock_api_key');
+        this.stockApiKey = null;
+        console.log('Stock API key cleared');
     }
 }
 
@@ -64,8 +99,14 @@ const config = new Config();
 // Auto-initialize when DOM is loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => config.initializeOpenAI(), 1000);
+        setTimeout(() => {
+            config.initializeOpenAI();
+            config.initializeStockAPI();
+        }, 1000);
     });
 } else {
-    setTimeout(() => config.initializeOpenAI(), 1000);
+    setTimeout(() => {
+        config.initializeOpenAI();
+        config.initializeStockAPI();
+    }, 1000);
 }
