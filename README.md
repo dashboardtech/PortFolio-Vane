@@ -5,7 +5,7 @@ A comprehensive portfolio management application with AI-powered investment reco
 ## 🚀 Features
 
 ### 📊 **Portfolio Management**
-- Real-time portfolio tracking with stable pricing system
+- Real-time portfolio tracking with live price data (Alpha Vantage) and stable fallback system
 - 11-sector ticker categorization with comprehensive ETF database
 - Multiple investment profiles (conservative, balanced, growth, aggressive)
 - Portfolio composition tracking and rebalancing tools
@@ -44,7 +44,13 @@ A comprehensive portfolio management application with AI-powered investment reco
    cd PortFolio-Vane
    ```
 
-2. **Start a local web server**
+2. **(Optional) Configure API keys**
+   ```bash
+   cp env.example.js env.js
+   # edit env.js and add your API keys
+   ```
+
+3. **Start a local web server**
    ```bash
    # Using Python
    python3 -m http.server 8000
@@ -53,7 +59,7 @@ A comprehensive portfolio management application with AI-powered investment reco
    npx http-server
    ```
 
-3. **Access the application**
+4. **Access the application**
    - Open your browser to `http://localhost:8000`
 
 ### 🔐 OpenAI Configuration
@@ -65,15 +71,27 @@ The AI features require an OpenAI API key:
 - Key is stored securely in your browser's localStorage
 - No code changes needed
 
-#### Option 2: Manual Configuration
-1. Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Edit `config.js`:
-   ```javascript
-   this.openAIApiKey = 'your-api-key-here';
-   this.promptForApiKey = false;
-   ```
+#### Option 2: `env.js` File
+1. Copy `env.example.js` to `env.js`
+2. Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+3. Add your key to `env.js` under `OPENAI_API_KEY`
 
 > **Security Note**: Never commit API keys to version control. Use environment variables or secure configuration management in production.
+
+### 📈 Stock Price Configuration
+
+The application can display real-time quotes using the [Alpha Vantage](https://www.alphavantage.co/) API:
+
+#### Option 1: User Prompt (Recommended)
+- On first use the app will ask for your Alpha Vantage API key
+- Key is stored only for the current session (sessionStorage)
+
+#### Option 2: `env.js` File
+1. Copy `env.example.js` to `env.js`
+2. Get your key from [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
+3. Add your key to `env.js` under `STOCK_API_KEY`
+
+> **Security Note**: Avoid committing API keys to version control.
 
 ## 📁 Project Structure
 
@@ -86,6 +104,7 @@ PortFolio-Vane/
 ├── openai-assistant.js     # OpenAI GPT-4 integration
 ├── ai-assistant.js         # AI feature management
 ├── config.js              # Configuration settings
+├── env.example.js         # Sample environment configuration
 ├── styles.css             # Complete responsive styling
 └── README.md              # This file
 ```
@@ -120,8 +139,9 @@ PortFolio-Vane/
 
 ## 🔧 Technical Features
 
-### Stable Pricing System
-- Hash-based consistent daily pricing (±2% daily variation)
+### Pricing System
+- Real-time quotes through Alpha Vantage when configured
+- Hash-based consistent daily pricing fallback (±2% daily variation)
 - Realistic stock prices for major equities
 - No dramatic price swings on refresh
 

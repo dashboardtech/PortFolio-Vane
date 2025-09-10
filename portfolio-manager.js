@@ -7,32 +7,11 @@ class PortfolioManager {
     }
 
     init() {
-        this.setupTabNavigation();
+        setupTabNavigation();
         this.setupCompositionEditor();
         this.setupInvestmentCalculator();
         this.loadSavedData();
         this.updateCompositionDisplay();
-    }
-
-    setupTabNavigation() {
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetTab = btn.dataset.tab;
-                
-                // Update active button
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // Update active content
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(`${targetTab}-tab`).classList.add('active');
-            });
-        });
     }
 
     loadComposition() {
@@ -414,60 +393,9 @@ class PortfolioManager {
         if (typeof portfolio !== 'undefined' && portfolio.getStableTickerData) {
             return parseFloat(portfolio.getStableTickerData(ticker).price);
         }
-        
+
         // Fallback static prices if main app not available
-        const prices = {
-            // Bonds
-            'AGG': 98.45,
-            'BND': 71.23,
-            'TLT': 92.34,
-            'IEF': 98.67,
-            'LQD': 112.45,
-            // Core
-            'IVV': 587.34,
-            'SPY': 585.23,
-            'VOO': 538.75,
-            'SPLG': 106.75,
-            'VTI': 278.34,
-            'SCHX': 61.23,
-            'ITOT': 115.67,
-            // Explore
-            'QQQ': 508.45,
-            'ARKK': 45.67,
-            'VGT': 543.21,
-            'XLK': 215.45,
-            // Protect
-            'XLP': 78.34,
-            'XLU': 69.45,
-            'VIG': 178.23,
-            'DVY': 123.45,
-            // Individual stocks - Realistic Prices (matching main app)
-            'AAPL': 233.45,
-            'MSFT': 450.23,
-            'GOOGL': 178.89,
-            'AMZN': 218.76,
-            'NVDA': 138.67,
-            'META': 590.45,
-            'TSLA': 381.23,
-            'BRK.B': 487.90,
-            'JPM': 234.56,
-            'V': 289.34,
-            'UNH': 634.78,
-            'JNJ': 178.45,
-            'WMT': 89.23,
-            'PG': 167.89,
-            'MA': 523.67,
-            'HD': 412.34,
-            'DIS': 123.89,
-            'BAC': 45.67,
-            'NFLX': 567.89,
-            'ADBE': 634.23,
-            'CRM': 345.67,
-            'PYPL': 78.90,
-            'INTC': 56.78,
-            'AMD': 189.45
-        };
-        return prices[ticker] || 150; // Default more realistic price
+        return PRICE_TABLE[ticker] || 150; // Default more realistic price
     }
 
     updatePricesFromMarket(tickerData) {

@@ -12,10 +12,9 @@ class OpenAIAssistant {
 
     async makeOpenAIRequest(messages, temperature = 0.7) {
         if (!this.apiKey) {
-            console.error('OpenAI API key not set. Please set it using setApiKey() method.');
-            return 'Error: OpenAI API key not configured. Please contact the administrator.';
+            throw new Error('OpenAI API key not configured.');
         }
-        
+
         try {
             const response = await fetch(this.baseURL, {
                 method: 'POST',
@@ -32,14 +31,15 @@ class OpenAIAssistant {
             });
 
             if (!response.ok) {
-                throw new Error(`OpenAI API error: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`OpenAI API error ${response.status}: ${errorText}`);
             }
 
             const data = await response.json();
             return data.choices[0].message.content;
         } catch (error) {
             console.error('Error calling OpenAI API:', error);
-            return null;
+            throw error;
         }
     }
 
