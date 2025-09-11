@@ -15,6 +15,7 @@ class PortfolioTracker {
         this.setupAIAssistant();
         this.setupProfileManager();
         this.initializeProfiles();
+        this.populateTickerSuggestions();
 
         if (!config.stockApiKey && !this.stockApiErrorNotified) {
             this.showError('API de precios no configurada; usando datos estimados.');
@@ -106,16 +107,66 @@ class PortfolioTracker {
         localStorage.setItem('userProfiles', JSON.stringify(this.profiles));
     }
 
+    populateTickerSuggestions() {
+        const datalist = document.getElementById('tickerSuggestions');
+        if (!datalist) return;
+
+        datalist.innerHTML = '';
+
+        tickerDB.getAllTickers()
+            .sort((a, b) => a.symbol.localeCompare(b.symbol))
+            .forEach(({ symbol, name, sector }) => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.label = `${name} (${sector})`;
+                datalist.appendChild(option);
+            });
+
+        // Include sector names for broader search suggestions
+        Object.values(tickerDB.sectors)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(sector => {
+            const option = document.createElement('option');
+            option.value = sector.name;
+            option.label = `${sector.name} (Sector)`;
+            datalist.appendChild(option);
+            });
+    }
+
     addTicker() {
         const input = document.getElementById('tickerInput');
-        const ticker = input.value.trim().toUpperCase();
-        
-        if (ticker && !this.tickers.includes(ticker)) {
-            this.tickers.push(ticker);
-            this.saveTickersToStorage();
-            this.fetchTickerData(ticker);
+        const rawValue = input.value.trim();
+        const sanitizedValue = SecurityUtils.sanitizeHTML(rawValue);
+        const ticker = sanitizedValue.toUpperCase();
+
+        // Try adding as direct ticker symbol
+        if (SecurityUtils.validateTicker(ticker)) {
+            if (!this.tickers.includes(ticker)) {
+                this.tickers.push(ticker);
+                this.saveTickersToStorage();
+                this.fetchTickerData(ticker);
+            } else {
+                this.showError('El ticker ya está en el portfolio.');
+            }
             input.value = '';
+            return;
         }
+
+        // Fallback: search by ticker name or sector
+        const results = tickerDB.searchTickers(sanitizedValue);
+        if (results.length > 0) {
+            const symbol = results[0].symbol;
+            if (!this.tickers.includes(symbol)) {
+                this.tickers.push(symbol);
+                this.saveTickersToStorage();
+                this.fetchTickerData(symbol);
+            } else {
+                this.showError('El ticker ya está en el portfolio.');
+            }
+        } else {
+            this.showError('No se encontró ticker o sector relacionado.');
+        }
+        input.value = '';
     }
 
     removeTicker(ticker) {
@@ -444,13 +495,21 @@ class PortfolioTracker {
     }
 
     addSpecificTicker(ticker) {
-        if (!this.tickers.includes(ticker)) {
-            this.tickers.push(ticker);
+        const sanitized = SecurityUtils.sanitizeHTML(ticker.trim().toUpperCase());
+        if (!SecurityUtils.validateTicker(sanitized)) {
+            this.showError('Ticker inválido.');
+            return;
+        }
+
+        if (!this.tickers.includes(sanitized)) {
+            this.tickers.push(sanitized);
             this.saveTickersToStorage();
-            this.fetchTickerData(ticker);
-            
+            this.fetchTickerData(sanitized);
+
             // Switch to market tab
             document.querySelector('[data-tab="market"]').click();
+        } else {
+            this.showError('El ticker ya está en el portfolio.');
         }
     }
 

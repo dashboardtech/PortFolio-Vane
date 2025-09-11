@@ -47,7 +47,8 @@
         <!-- Tab Content: Market -->
         <div id="market-tab" class="tab-content active">
             <div class="add-ticker-section">
-                <input type="text" id="tickerInput" placeholder="Buscar ticker o sector..." />
+                <input type="text" id="tickerInput" list="tickerSuggestions" placeholder="Buscar ticker o sector..." />
+                <datalist id="tickerSuggestions"></datalist>
                 <button id="addTickerBtn">+ Agregar</button>
                 <button id="searchSectorBtn">🔍 Buscar por Sector</button>
             </div>
