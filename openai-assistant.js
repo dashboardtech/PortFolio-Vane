@@ -3,7 +3,10 @@ class OpenAIAssistant {
         this.apiKey = null; // Set via setApiKey() method for security
         this.baseURL = 'https://api.openai.com/v1/chat/completions';
         this.chatHistory = [];
-        this.userContext = null;
+        this.userContext = {};
+        this.questionCache = new Map();
+        this.maxChatHistory = 20;
+        this.maxCacheSize = 50;
     }
 
     setApiKey(apiKey) {
@@ -224,17 +227,27 @@ class OpenAIAssistant {
     }
 
     async askQuestion(question, context = {}) {
+        const combinedContext = { ...this.userContext, ...context };
+        const cacheKey = JSON.stringify({ question, context: combinedContext });
+
+        if (this.questionCache.has(cacheKey)) {
+            return this.questionCache.get(cacheKey);
+        }
+
         // Add question to chat history
         this.chatHistory.push({ role: 'user', content: question });
+        if (this.chatHistory.length > this.maxChatHistory) {
+            this.chatHistory.shift();
+        }
 
         const systemPrompt = `Eres un asesor financiero experto especializado en ETFs y inversiones pasivas.
         Responde preguntas sobre inversiones de manera clara y educativa.
-        
+
         CONTEXTO DEL USUARIO:
-        - Portfolio actual: ${context.portfolio || 'No especificado'}
-        - Perfil de riesgo: ${context.riskProfile || 'No determinado'}
-        - Monto invertido: ${context.investmentAmount || 'No especificado'}
-        
+        - Portfolio actual: ${combinedContext.portfolio || 'No especificado'}
+        - Perfil de riesgo: ${combinedContext.riskProfile || 'No determinado'}
+        - Monto invertido: ${combinedContext.investmentAmount || 'No especificado'}
+
         Mantén tus respuestas:
         - Educativas y fáciles de entender
         - Específicas con tickers cuando sea relevante
@@ -248,10 +261,18 @@ class OpenAIAssistant {
             ];
 
             const response = await this.makeOpenAIRequest(messages, 0.7);
-            
+
             if (response) {
-                // Add AI response to chat history
+                // Add AI response to chat history and cache
                 this.chatHistory.push({ role: 'assistant', content: response });
+                if (this.chatHistory.length > this.maxChatHistory) {
+                    this.chatHistory.shift();
+                }
+                this.questionCache.set(cacheKey, response);
+                if (this.questionCache.size > this.maxCacheSize) {
+                    const oldestKey = this.questionCache.keys().next().value;
+                    this.questionCache.delete(oldestKey);
+                }
                 return response;
             }
         } catch (error) {
@@ -435,10 +456,11 @@ class OpenAIAssistant {
 
     clearChatHistory() {
         this.chatHistory = [];
+        this.questionCache.clear();
     }
 
     setUserContext(context) {
-        this.userContext = context;
+        this.userContext = { ...this.userContext, ...context };
     }
 }
 

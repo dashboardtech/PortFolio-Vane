@@ -1,6 +1,5 @@
 class AIPortfolioAssistant {
     constructor() {
-        this.analysisCache = new Map();
         this.recommendations = [];
     }
 
