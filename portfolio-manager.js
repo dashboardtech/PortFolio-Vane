@@ -7,7 +7,6 @@ class PortfolioManager {
     }
 
     init() {
-        setupTabNavigation();
         this.loadSavedData();
         this.updateCompositionDisplay();
         this.setupCompositionEditor();

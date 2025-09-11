@@ -2,6 +2,12 @@ function setupTabNavigation(loadCallback) {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Prevent duplicate initialization
+    if (document.body.dataset.tabsInitialized === 'true') {
+        return;
+    }
+    document.body.dataset.tabsInitialized = 'true';
+
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTab = btn.dataset.tab;
@@ -22,4 +28,10 @@ function setupTabNavigation(loadCallback) {
             }
         });
     });
+
+    // Trigger load for initially active tab
+    const activeBtn = document.querySelector('.tab-btn.active');
+    if (activeBtn && typeof loadCallback === 'function') {
+        loadCallback(activeBtn.dataset.tab);
+    }
 }
