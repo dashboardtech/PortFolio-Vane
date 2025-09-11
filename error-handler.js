@@ -7,17 +7,26 @@ class ErrorHandler {
     }
     
     setupGlobalErrorHandlers() {
-        // Catch unhandled JavaScript errors
+        // Catch unhandled JavaScript and resource loading errors
         window.addEventListener('error', (event) => {
-            this.logError({
-                type: 'javascript',
-                message: event.message,
-                source: event.filename,
-                line: event.lineno,
-                column: event.colno,
-                error: event.error
-            });
-        });
+            const target = event.target || event.srcElement;
+            if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+                this.logError({
+                    type: 'resource',
+                    message: `Failed to load ${target.tagName.toLowerCase()}: ${target.src || target.href}`,
+                    source: target.src || target.href
+                });
+            } else {
+                this.logError({
+                    type: 'javascript',
+                    message: event.message,
+                    source: event.filename,
+                    line: event.lineno,
+                    column: event.colno,
+                    error: event.error
+                });
+            }
+        }, true);
         
         // Catch unhandled promise rejections
         window.addEventListener('unhandledrejection', (event) => {

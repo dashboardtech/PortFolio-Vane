@@ -8,10 +8,9 @@ class PortfolioManager {
 
     init() {
         setupTabNavigation();
-        this.setupCompositionEditor();
-        this.setupInvestmentCalculator();
         this.loadSavedData();
         this.updateCompositionDisplay();
+        this.setupCompositionEditor();
     }
 
     loadComposition() {
@@ -40,6 +39,11 @@ class PortfolioManager {
         const protectInput = document.getElementById('protectInput');
         const saveBtn = document.getElementById('saveCompositionBtn');
         const validationMsg = document.getElementById('validationMsg');
+
+        // Exit early if composition editor elements don't exist
+        if (!fixedIncomeInput || !equityInput || !coreInput || !exploreInput || !protectInput || !saveBtn || !validationMsg) {
+            return;
+        }
 
         // Update equity when fixed income changes
         fixedIncomeInput.addEventListener('input', () => {
@@ -103,7 +107,7 @@ class PortfolioManager {
             btn.addEventListener('click', () => {
                 const preset = btn.dataset.preset;
                 let config = {};
-                
+
                 switch(preset) {
                     case 'conservative':
                         config = { fixed: 70, core: 21, explore: 4.5, protect: 4.5 };
@@ -118,7 +122,7 @@ class PortfolioManager {
                         config = { fixed: 5, core: 66.5, explore: 14.25, protect: 14.25 };
                         break;
                 }
-                
+
                 fixedIncomeInput.value = config.fixed;
                 equityInput.value = 100 - config.fixed;
                 coreInput.value = config.core;
@@ -131,22 +135,28 @@ class PortfolioManager {
     setupInvestmentCalculator() {
         const investmentInput = document.getElementById('investmentAmount');
         const calculateBtn = document.getElementById('calculateBtn');
-        
-        investmentInput.addEventListener('input', (e) => {
-            this.investmentAmount = parseFloat(e.target.value) || 0;
-        });
-        
-        calculateBtn.addEventListener('click', () => {
-            this.calculateDistribution();
-        });
+
+        if (investmentInput) {
+            investmentInput.addEventListener('input', (e) => {
+                this.investmentAmount = parseFloat(e.target.value) || 0;
+            });
+        }
+
+        if (calculateBtn) {
+            calculateBtn.addEventListener('click', () => {
+                this.calculateDistribution();
+            });
+        }
 
         // Update ticker selections
         ['fixedIncomeTicker', 'coreTicker', 'exploreTicker', 'protectTicker'].forEach(id => {
             const select = document.getElementById(id);
-            select.addEventListener('change', () => {
-                this.saveSelectedTickers();
-                this.calculateDistribution();
-            });
+            if (select) {
+                select.addEventListener('change', () => {
+                    this.saveSelectedTickers();
+                    this.calculateDistribution();
+                });
+            }
         });
     }
 
@@ -322,13 +332,23 @@ class PortfolioManager {
             return;
         }
 
+        const fixedTicker = document.getElementById('fixedIncomeTicker');
+        const coreTicker = document.getElementById('coreTicker');
+        const exploreTicker = document.getElementById('exploreTicker');
+        const protectTicker = document.getElementById('protectTicker');
+        const table = document.getElementById('distributionTable');
+
+        if (!fixedTicker || !coreTicker || !exploreTicker || !protectTicker || !table) {
+            return;
+        }
+
         localStorage.setItem('investmentAmount', this.investmentAmount.toString());
 
         const tickers = {
-            fixedIncome: document.getElementById('fixedIncomeTicker').value,
-            core: document.getElementById('coreTicker').value,
-            explore: document.getElementById('exploreTicker').value,
-            protect: document.getElementById('protectTicker').value
+            fixedIncome: fixedTicker.value,
+            core: coreTicker.value,
+            explore: exploreTicker.value,
+            protect: protectTicker.value
         };
 
         // Get prices for selected tickers
@@ -361,7 +381,6 @@ class PortfolioManager {
             }
         ];
 
-        const table = document.getElementById('distributionTable');
         const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
 
         distributions.forEach(dist => {
