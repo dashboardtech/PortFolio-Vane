@@ -24,7 +24,7 @@ class PortfolioTracker {
         if (this.tickers.length > 0) {
             this.fetchAllData();
         }
-        setInterval(() => this.fetchAllData(), 60000);
+        // Refresh interval controlled by settings-manager.js
     }
 
     setupEventListeners() {
