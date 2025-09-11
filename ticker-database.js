@@ -343,6 +343,20 @@ class TickerDatabase {
         return recommendations.sort((a, b) => b.percentage - a.percentage);
     }
 
+    getAllTickers() {
+        const all = [];
+        Object.entries(this.sectors).forEach(([sectorId, sector]) => {
+            sector.tickers.forEach(ticker => {
+                all.push({
+                    ...ticker,
+                    sector: sector.name,
+                    sectorId
+                });
+            });
+        });
+        return all;
+    }
+
     searchTickers(query) {
         const results = [];
         const lowerQuery = query.toLowerCase();
